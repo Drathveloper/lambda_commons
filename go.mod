@@ -1,4 +1,4 @@
-module lambda_commons
+module github.com/Drathveloper/lambda_commons
 
 go 1.16
 
