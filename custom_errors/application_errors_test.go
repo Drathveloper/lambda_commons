@@ -1,8 +1,8 @@
 package custom_errors_test
 
 import (
+	"github.com/Drathveloper/lambda_commons/custom_errors"
 	"github.com/stretchr/testify/assert"
-	"lambda_commons/custom_errors"
 	"testing"
 )
 

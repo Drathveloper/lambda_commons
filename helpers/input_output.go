@@ -2,10 +2,10 @@ package helpers
 
 import (
 	"encoding/json"
+	"github.com/Drathveloper/lambda_commons/custom_errors"
+	"github.com/Drathveloper/lambda_commons/models"
+	"github.com/Drathveloper/lambda_commons/parsers"
 	"github.com/aws/aws-lambda-go/events"
-	"lambda_commons/custom_errors"
-	"lambda_commons/models"
-	"lambda_commons/parsers"
 )
 
 func MapErrorToAPIGatewayProxyResponse(customError custom_errors.GenericApplicationError) events.APIGatewayProxyResponse {

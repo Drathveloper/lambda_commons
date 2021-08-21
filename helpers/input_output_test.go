@@ -1,10 +1,10 @@
 package helpers_test
 
 import (
+	"github.com/Drathveloper/lambda_commons/custom_errors"
+	"github.com/Drathveloper/lambda_commons/helpers"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/stretchr/testify/assert"
-	"lambda_commons/custom_errors"
-	"lambda_commons/helpers"
 	"math"
 	"testing"
 )

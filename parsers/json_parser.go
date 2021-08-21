@@ -2,7 +2,7 @@ package parsers
 
 import (
 	"encoding/json"
-	"lambda_commons/custom_errors"
+	"github.com/Drathveloper/lambda_commons/custom_errors"
 )
 
 func BindRequest(body string, bind interface{}) custom_errors.GenericApplicationError {
