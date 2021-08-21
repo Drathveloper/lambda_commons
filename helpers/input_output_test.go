@@ -11,9 +11,11 @@ import (
 
 func TestMapErrorToAPIGatewayProxyResponse_ShouldSucceed(t *testing.T) {
 	customError := custom_errors.NewGenericInternalServerError()
+	requestHeaders := make(map[string]string, 0)
 	expected := events.APIGatewayProxyResponse{
 		StatusCode: 500,
 		Body:       `{"message":"internal server error"}`,
+		Headers:    requestHeaders,
 	}
 	actual := helpers.MapErrorToAPIGatewayProxyResponse(customError)
 	assert.Equal(t, expected, actual)

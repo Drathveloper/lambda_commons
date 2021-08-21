@@ -72,7 +72,7 @@ func TestBindResponse_ShouldSucceed(t *testing.T) {
 }
 
 func TestBindResponse_ShouldReturnInternalServerErrorWhenMarshalFailed(t *testing.T) {
-	expected := custom_errors.NewInternalServerError("json: unsupported value: +Inf")
+	expected := custom_errors.NewInternalServerError("internal server error")
 	_, appErr := parsers.BindResponse(math.Inf(1))
 	assert.Equal(t, expected, appErr)
 }
