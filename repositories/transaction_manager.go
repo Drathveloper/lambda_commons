@@ -89,7 +89,7 @@ func (repository *dynamodbTransactionalRepository) handleTransactionError(err er
 	if errors.As(err, &dynamodbErr) {
 		for _, reason := range dynamodbErr.CancellationReasons {
 			if constants.ConditionalCheckFailed == *reason.Code {
-				return custom_errors.NewInternalServerError(fmt.Sprintf("conditional check failed: %s", *reason.Message))
+				return custom_errors.NewForbiddenError(fmt.Sprintf("conditional check failed: %s", *reason.Message))
 			}
 		}
 	}
