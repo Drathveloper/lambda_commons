@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"errors"
+	"fmt"
 	"github.com/Drathveloper/lambda_commons/constants"
 	"github.com/Drathveloper/lambda_commons/custom_errors"
 	"github.com/Drathveloper/lambda_commons/helpers"
@@ -47,7 +49,7 @@ func (repository *dynamodbTransactionalRepository) ExecuteReadTransaction(ctx *m
 	transactionInput := input.(dynamodb.TransactGetItemsInput)
 	transactionOutput, err := repository.client.TransactGetItems(ctx, &transactionInput)
 	if err != nil {
-		return nil, custom_errors.NewInternalServerError("error performing read transaction")
+		return nil, repository.handleTransactionError(err)
 	}
 	tableNames := make([]string, 0)
 	for _, request := range transactionInput.TransactItems {
@@ -77,8 +79,19 @@ func (repository *dynamodbTransactionalRepository) ExecuteWriteTransaction(ctx *
 	transactionInput := input.(dynamodb.TransactWriteItemsInput)
 	_, err := repository.client.TransactWriteItems(ctx, &transactionInput)
 	if err != nil {
-		//TransactionCancelledException handle
-		return custom_errors.NewInternalServerError("error performing write transaction")
+		return repository.handleTransactionError(err)
 	}
 	return nil
+}
+
+func (repository *dynamodbTransactionalRepository) handleTransactionError(err error) custom_errors.GenericApplicationError {
+	var dynamodbErr *types.TransactionCanceledException
+	if errors.As(err, &dynamodbErr) {
+		for _, reason := range dynamodbErr.CancellationReasons {
+			if constants.ConditionalCheckFailed == *reason.Code {
+				return custom_errors.NewInternalServerError(fmt.Sprintf("conditional check failed: %s", *reason.Message))
+			}
+		}
+	}
+	return custom_errors.NewInternalServerError("generic error performing transaction")
 }

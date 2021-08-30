@@ -112,7 +112,7 @@ func (suite *DynamodbTransactionManagerTestSuite) TestExecuteReadTransaction_Sho
 	transactionOutput := dynamodb.TransactGetItemsOutput{}
 	context.Set(constants.ReadTransaction, transactionInput)
 	cause := errors.New("someErr")
-	expectedAppErr := custom_errors.NewInternalServerError("error performing read transaction")
+	expectedAppErr := custom_errors.NewInternalServerError("generic error performing transaction")
 	suite.dynamodbClient.EXPECT().TransactGetItems(&context, &transactionInput).Return(&transactionOutput, cause)
 
 	_, appErr := suite.transactionManager.ExecuteReadTransaction(&context)
@@ -194,7 +194,7 @@ func (suite *DynamodbTransactionManagerTestSuite) TestExecuteWriteTransaction_Sh
 	transactionOutput := dynamodb.TransactWriteItemsOutput{}
 	context.Set(constants.WriteTransaction, transactionInput)
 	cause := errors.New("someErr")
-	expectedAppErr := custom_errors.NewInternalServerError("error performing write transaction")
+	expectedAppErr := custom_errors.NewInternalServerError("generic error performing transaction")
 	suite.dynamodbClient.EXPECT().TransactWriteItems(&context, &transactionInput).Return(&transactionOutput, cause)
 
 	appErr := suite.transactionManager.ExecuteWriteTransaction(&context)

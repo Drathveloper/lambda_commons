@@ -1,6 +1,7 @@
 package constants
 
 const (
-	ReadTransaction  = "readTransaction"
-	WriteTransaction = "writeTransaction"
+	ReadTransaction        = "readTransaction"
+	WriteTransaction       = "writeTransaction"
+	ConditionalCheckFailed = "ConditionalCheckFailed"
 )
