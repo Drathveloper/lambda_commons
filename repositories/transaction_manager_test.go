@@ -15,23 +15,23 @@ import (
 	"testing"
 )
 
-type DynamodbTransactionalRepositoryTestSuite struct {
+type DynamodbTransactionManagerTestSuite struct {
 	suite.Suite
-	dynamodbClient          *mocks.MockDynamodbClientAPI
-	transactionalRepository repositories.DynamodbTransactionalRepository
+	dynamodbClient     *mocks.MockDynamodbClientAPI
+	transactionManager repositories.DynamodbTransactionManager
 }
 
-func TestDynamodbTransactionalRepositoryTestSuite(t *testing.T) {
-	suite.Run(t, new(DynamodbTransactionalRepositoryTestSuite))
+func TestDynamodbTransactionManagerTestSuite(t *testing.T) {
+	suite.Run(t, new(DynamodbTransactionManagerTestSuite))
 }
 
-func (suite *DynamodbTransactionalRepositoryTestSuite) SetupTest() {
+func (suite *DynamodbTransactionManagerTestSuite) SetupTest() {
 	controller := gomock.NewController(suite.T())
 	suite.dynamodbClient = mocks.NewMockDynamodbClientAPI(controller)
-	suite.transactionalRepository = repositories.NewDynamodbTransactionalRepository(suite.dynamodbClient)
+	suite.transactionManager = repositories.NewDynamodbTransactionManager(suite.dynamodbClient)
 }
 
-func (suite *DynamodbTransactionalRepositoryTestSuite) TestStartReadTransaction_ShouldSucceed() {
+func (suite *DynamodbTransactionManagerTestSuite) TestStartReadTransaction_ShouldSucceed() {
 	context := models.NewLambdaContext()
 	expectedContext := models.NewLambdaContext()
 	transactGetItems := make([]types.TransactGetItem, 0)
@@ -40,13 +40,13 @@ func (suite *DynamodbTransactionalRepositoryTestSuite) TestStartReadTransaction_
 	}
 	expectedContext.Set(constants.ReadTransaction, transactionInput)
 
-	appErr := suite.transactionalRepository.StartReadTransaction(&context)
+	appErr := suite.transactionManager.StartReadTransaction(&context)
 
 	suite.NoError(appErr)
 	suite.Equal(expectedContext, context)
 }
 
-func (suite *DynamodbTransactionalRepositoryTestSuite) TestStartReadTransaction_ShouldReturnErrorWhenTransactionAlreadyStarted() {
+func (suite *DynamodbTransactionManagerTestSuite) TestStartReadTransaction_ShouldReturnErrorWhenTransactionAlreadyStarted() {
 	context := models.NewLambdaContext()
 	transactGetItems := make([]types.TransactGetItem, 0)
 	transactionInput := dynamodb.TransactGetItemsInput{
@@ -55,12 +55,12 @@ func (suite *DynamodbTransactionalRepositoryTestSuite) TestStartReadTransaction_
 	context.Set(constants.ReadTransaction, transactionInput)
 	expectedAppErr := custom_errors.NewInternalServerError("there is already a read transaction in progress in this scope")
 
-	appErr := suite.transactionalRepository.StartReadTransaction(&context)
+	appErr := suite.transactionManager.StartReadTransaction(&context)
 
 	suite.Equal(expectedAppErr, appErr)
 }
 
-func (suite *DynamodbTransactionalRepositoryTestSuite) TestExecuteReadTransaction_ShouldSucceed() {
+func (suite *DynamodbTransactionManagerTestSuite) TestExecuteReadTransaction_ShouldSucceed() {
 	context := models.NewLambdaContext()
 	transactionInput := dynamodb.TransactGetItemsInput{
 		TransactItems: []types.TransactGetItem{
@@ -92,13 +92,13 @@ func (suite *DynamodbTransactionalRepositoryTestSuite) TestExecuteReadTransactio
 
 	suite.dynamodbClient.EXPECT().TransactGetItems(&context, &transactionInput).Return(&transactionOutput, nil)
 
-	response, appErr := suite.transactionalRepository.ExecuteReadTransaction(&context)
+	response, appErr := suite.transactionManager.ExecuteReadTransaction(&context)
 
 	suite.NoError(appErr)
 	suite.Equal(expectedItems, response)
 }
 
-func (suite *DynamodbTransactionalRepositoryTestSuite) TestExecuteReadTransaction_ShouldReturnInternalServerErrorWhenTransactionFailed() {
+func (suite *DynamodbTransactionManagerTestSuite) TestExecuteReadTransaction_ShouldReturnInternalServerErrorWhenTransactionFailed() {
 	context := models.NewLambdaContext()
 	transactionInput := dynamodb.TransactGetItemsInput{
 		TransactItems: []types.TransactGetItem{
@@ -115,22 +115,22 @@ func (suite *DynamodbTransactionalRepositoryTestSuite) TestExecuteReadTransactio
 	expectedAppErr := custom_errors.NewInternalServerError("error performing read transaction")
 	suite.dynamodbClient.EXPECT().TransactGetItems(&context, &transactionInput).Return(&transactionOutput, cause)
 
-	_, appErr := suite.transactionalRepository.ExecuteReadTransaction(&context)
+	_, appErr := suite.transactionManager.ExecuteReadTransaction(&context)
 
 	suite.Equal(expectedAppErr, appErr)
 }
 
-func (suite *DynamodbTransactionalRepositoryTestSuite) TestExecuteReadTransaction_ShouldReturnInternalServerErrorWhenNoTransactionStarted() {
+func (suite *DynamodbTransactionManagerTestSuite) TestExecuteReadTransaction_ShouldReturnInternalServerErrorWhenNoTransactionStarted() {
 	context := models.NewLambdaContext()
 
 	expectedAppErr := custom_errors.NewInternalServerError("there is no read transaction in progress")
 
-	_, appErr := suite.transactionalRepository.ExecuteReadTransaction(&context)
+	_, appErr := suite.transactionManager.ExecuteReadTransaction(&context)
 
 	suite.Equal(expectedAppErr, appErr)
 }
 
-func (suite *DynamodbTransactionalRepositoryTestSuite) TestStartWriteTransaction_ShouldSucceed() {
+func (suite *DynamodbTransactionManagerTestSuite) TestStartWriteTransaction_ShouldSucceed() {
 	context := models.NewLambdaContext()
 	expectedContext := models.NewLambdaContext()
 	transactWriteItems := make([]types.TransactWriteItem, 0)
@@ -139,13 +139,13 @@ func (suite *DynamodbTransactionalRepositoryTestSuite) TestStartWriteTransaction
 	}
 	expectedContext.Set(constants.WriteTransaction, transactionInput)
 
-	appErr := suite.transactionalRepository.StartWriteTransaction(&context)
+	appErr := suite.transactionManager.StartWriteTransaction(&context)
 
 	suite.NoError(appErr)
 	suite.Equal(expectedContext, context)
 }
 
-func (suite *DynamodbTransactionalRepositoryTestSuite) TestStartWriteTransaction_ShouldReturnErrorWhenTransactionAlreadyStarted() {
+func (suite *DynamodbTransactionManagerTestSuite) TestStartWriteTransaction_ShouldReturnErrorWhenTransactionAlreadyStarted() {
 	context := models.NewLambdaContext()
 	transactWriteItems := make([]types.TransactWriteItem, 0)
 	transactionInput := dynamodb.TransactWriteItemsInput{
@@ -154,12 +154,12 @@ func (suite *DynamodbTransactionalRepositoryTestSuite) TestStartWriteTransaction
 	context.Set(constants.WriteTransaction, transactionInput)
 	expectedAppErr := custom_errors.NewInternalServerError("there is already a write transaction in progress in this scope")
 
-	appErr := suite.transactionalRepository.StartWriteTransaction(&context)
+	appErr := suite.transactionManager.StartWriteTransaction(&context)
 
 	suite.Equal(expectedAppErr, appErr)
 }
 
-func (suite *DynamodbTransactionalRepositoryTestSuite) TestExecuteWriteTransaction_ShouldSucceed() {
+func (suite *DynamodbTransactionManagerTestSuite) TestExecuteWriteTransaction_ShouldSucceed() {
 	context := models.NewLambdaContext()
 	transactionInput := dynamodb.TransactWriteItemsInput{
 		TransactItems: []types.TransactWriteItem{
@@ -175,12 +175,12 @@ func (suite *DynamodbTransactionalRepositoryTestSuite) TestExecuteWriteTransacti
 
 	suite.dynamodbClient.EXPECT().TransactWriteItems(&context, &transactionInput).Return(&transactionOutput, nil)
 
-	appErr := suite.transactionalRepository.ExecuteWriteTransaction(&context)
+	appErr := suite.transactionManager.ExecuteWriteTransaction(&context)
 
 	suite.NoError(appErr)
 }
 
-func (suite *DynamodbTransactionalRepositoryTestSuite) TestExecuteWriteTransaction_ShouldReturnInternalServerErrorWhenTransactionFailed() {
+func (suite *DynamodbTransactionManagerTestSuite) TestExecuteWriteTransaction_ShouldReturnInternalServerErrorWhenTransactionFailed() {
 	context := models.NewLambdaContext()
 	transactionInput := dynamodb.TransactWriteItemsInput{
 		TransactItems: []types.TransactWriteItem{
@@ -197,17 +197,17 @@ func (suite *DynamodbTransactionalRepositoryTestSuite) TestExecuteWriteTransacti
 	expectedAppErr := custom_errors.NewInternalServerError("error performing write transaction")
 	suite.dynamodbClient.EXPECT().TransactWriteItems(&context, &transactionInput).Return(&transactionOutput, cause)
 
-	appErr := suite.transactionalRepository.ExecuteWriteTransaction(&context)
+	appErr := suite.transactionManager.ExecuteWriteTransaction(&context)
 
 	suite.Equal(expectedAppErr, appErr)
 }
 
-func (suite *DynamodbTransactionalRepositoryTestSuite) TestExecuteWriteTransaction_ShouldReturnInternalServerErrorWhenNoTransactionStarted() {
+func (suite *DynamodbTransactionManagerTestSuite) TestExecuteWriteTransaction_ShouldReturnInternalServerErrorWhenNoTransactionStarted() {
 	context := models.NewLambdaContext()
 
 	expectedAppErr := custom_errors.NewInternalServerError("there is no write transaction in progress")
 
-	appErr := suite.transactionalRepository.ExecuteWriteTransaction(&context)
+	appErr := suite.transactionManager.ExecuteWriteTransaction(&context)
 
 	suite.Equal(expectedAppErr, appErr)
 }

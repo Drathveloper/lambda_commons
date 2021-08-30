@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
-type DynamodbTransactionalRepository interface {
+type DynamodbTransactionManager interface {
 	StartReadTransaction(ctx *models.LambdaContext) custom_errors.GenericApplicationError
 	ExecuteReadTransaction(ctx *models.LambdaContext) (map[string]types.AttributeValue, custom_errors.GenericApplicationError)
 	StartWriteTransaction(ctx *models.LambdaContext) custom_errors.GenericApplicationError
@@ -20,7 +20,7 @@ type dynamodbTransactionalRepository struct {
 	client models.DynamodbClientAPI
 }
 
-func NewDynamodbTransactionalRepository(client models.DynamodbClientAPI) DynamodbTransactionalRepository {
+func NewDynamodbTransactionManager(client models.DynamodbClientAPI) DynamodbTransactionManager {
 	return &dynamodbTransactionalRepository{
 		client: client,
 	}
