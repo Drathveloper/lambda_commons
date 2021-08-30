@@ -9,8 +9,3 @@ type DynamodbComplexPrimaryKey struct {
 	PartitionKey DynamodbSimplePrimaryKey
 	SortKey      DynamodbSimplePrimaryKey
 }
-
-type DynamodbKeyNames struct {
-	PartitionKeyName string
-	SortKeyName      string
-}
