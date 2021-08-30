@@ -6,6 +6,7 @@ import (
 	"github.com/Drathveloper/lambda_commons/models"
 	"github.com/Drathveloper/lambda_commons/parsers"
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
 func MapErrorToAPIGatewayProxyResponse(customError custom_errors.GenericApplicationError) events.APIGatewayProxyResponse {
@@ -41,4 +42,16 @@ func MapResponseToAPIGatewayProxyResponseWithHeaders(httpStatus int, body interf
 		Body:       responseBody,
 		Headers:    responseHeaders,
 	}
+}
+
+func MergeResponsesIntoAttributeValueMap(tableNames []string, items []types.ItemResponse) map[string]types.AttributeValue {
+	result := make(map[string]types.AttributeValue, 0)
+	for index, item := range items {
+		tableName := tableNames[index]
+		attributeValueMap := item.Item
+		for key, attribute := range attributeValueMap {
+			result[tableName+"#"+key] = attribute
+		}
+	}
+	return result
 }
