@@ -1,4 +1,4 @@
-package models
+package common_models
 
 //go:generate mockgen -source=aws_interfaces.go -destination=../mocks/mock_dynamodb.go -package=mocks
 

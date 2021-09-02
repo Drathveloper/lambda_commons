@@ -1,4 +1,4 @@
-package custom_errors
+package common_errors
 
 type GenericApplicationError interface {
 	Error() string

@@ -1,4 +1,4 @@
-package models
+package common_models
 
 type DynamodbSimplePrimaryKey struct {
 	KeyName string

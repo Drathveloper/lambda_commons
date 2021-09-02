@@ -1,16 +1,16 @@
-package helpers
+package common_helpers
 
 import (
 	"encoding/json"
-	"github.com/Drathveloper/lambda_commons/custom_errors"
-	"github.com/Drathveloper/lambda_commons/models"
-	"github.com/Drathveloper/lambda_commons/parsers"
+	"github.com/Drathveloper/lambda_commons/common_errors"
+	"github.com/Drathveloper/lambda_commons/common_models"
+	"github.com/Drathveloper/lambda_commons/common_parsers"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
-func MapErrorToAPIGatewayProxyResponse(customError custom_errors.GenericApplicationError) events.APIGatewayProxyResponse {
-	responseBody := models.ErrorResponse{
+func MapErrorToAPIGatewayProxyResponse(customError common_errors.GenericApplicationError) events.APIGatewayProxyResponse {
+	responseBody := common_models.ErrorResponse{
 		Message: customError.Error(),
 	}
 	responseHeaders := make(map[string]string, 0)
@@ -27,7 +27,7 @@ func MapResponseToAPIGatewayProxyResponse(httpStatus int, body interface{}) even
 }
 
 func MapResponseToAPIGatewayProxyResponseWithHeaders(httpStatus int, body interface{}, headers map[string]string) events.APIGatewayProxyResponse {
-	responseBody, appErr := parsers.BindResponse(body)
+	responseBody, appErr := common_parsers.BindResponse(body)
 	if appErr != nil {
 		return MapErrorToAPIGatewayProxyResponse(appErr)
 	}

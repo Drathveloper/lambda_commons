@@ -1,8 +1,8 @@
-package helpers_test
+package common_helpers_test
 
 import (
-	"github.com/Drathveloper/lambda_commons/custom_errors"
-	"github.com/Drathveloper/lambda_commons/helpers"
+	"github.com/Drathveloper/lambda_commons/common_errors"
+	"github.com/Drathveloper/lambda_commons/common_helpers"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/stretchr/testify/assert"
 	"math"
@@ -10,14 +10,14 @@ import (
 )
 
 func TestMapErrorToAPIGatewayProxyResponse_ShouldSucceed(t *testing.T) {
-	customError := custom_errors.NewGenericInternalServerError()
+	customError := common_errors.NewGenericInternalServerError()
 	requestHeaders := make(map[string]string, 0)
 	expected := events.APIGatewayProxyResponse{
 		StatusCode: 500,
 		Body:       `{"message":"internal server error"}`,
 		Headers:    requestHeaders,
 	}
-	actual := helpers.MapErrorToAPIGatewayProxyResponse(customError)
+	actual := common_helpers.MapErrorToAPIGatewayProxyResponse(customError)
 	assert.Equal(t, expected, actual)
 }
 
@@ -29,7 +29,7 @@ func TestMapResponseToAPIGatewayProxyResponseWithHeaders_ShouldSucceed(t *testin
 		Body:       `"xx"`,
 		Headers:    headers,
 	}
-	actualResponse := helpers.MapResponseToAPIGatewayProxyResponseWithHeaders(201, "xx", headers)
+	actualResponse := common_helpers.MapResponseToAPIGatewayProxyResponseWithHeaders(201, "xx", headers)
 	assert.Equal(t, expectedResponse, actualResponse)
 }
 
@@ -40,7 +40,7 @@ func TestMapResponseToAPIGatewayProxyResponseWithHeaders_ShouldReturnInternalSer
 		Body:       `{"message":"internal server error"}`,
 		Headers:    headers,
 	}
-	actualResponse := helpers.MapResponseToAPIGatewayProxyResponseWithHeaders(201, math.Inf(1), headers)
+	actualResponse := common_helpers.MapResponseToAPIGatewayProxyResponseWithHeaders(201, math.Inf(1), headers)
 	assert.Equal(t, expectedResponse, actualResponse)
 }
 
@@ -51,6 +51,6 @@ func TestMapResponseToAPIGatewayProxyResponse_ShouldSucceed(t *testing.T) {
 		Body:       `"xx"`,
 		Headers:    headers,
 	}
-	actualResponse := helpers.MapResponseToAPIGatewayProxyResponse(201, "xx")
+	actualResponse := common_helpers.MapResponseToAPIGatewayProxyResponse(201, "xx")
 	assert.Equal(t, expectedResponse, actualResponse)
 }

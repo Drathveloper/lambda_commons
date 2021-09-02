@@ -1,4 +1,4 @@
-package constants
+package common_constants
 
 const (
 	ReadTransaction        = "readTransaction"

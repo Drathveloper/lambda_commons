@@ -1,8 +1,8 @@
-package parsers_test
+package common_parsers_test
 
 import (
-	"github.com/Drathveloper/lambda_commons/custom_errors"
-	"github.com/Drathveloper/lambda_commons/parsers"
+	"github.com/Drathveloper/lambda_commons/common_errors"
+	"github.com/Drathveloper/lambda_commons/common_parsers"
 	"github.com/stretchr/testify/assert"
 	"math"
 	"testing"
@@ -31,7 +31,7 @@ func TestBindRequest_ShouldSucceed(t *testing.T) {
 		}
 	}`
 	var model TestBindModel
-	actual := parsers.BindRequest(requestBody, &model)
+	actual := common_parsers.BindRequest(requestBody, &model)
 	assert.Nil(t, actual)
 	assert.Equal(t, "someValue", model.Some1)
 	assert.Equal(t, 1, model.Some2)
@@ -50,8 +50,8 @@ func TestBindRequest_ShouldReturnBadRequestErrorWhenUnmarshalFailed(t *testing.T
 			"someZ": ["1", "2", "3"]
 	}`
 	var model TestBindModel
-	expected := custom_errors.NewBadRequestError("unexpected end of JSON input")
-	actual := parsers.BindRequest(requestBody, &model)
+	expected := common_errors.NewBadRequestError("unexpected end of JSON input")
+	actual := common_parsers.BindRequest(requestBody, &model)
 	assert.Equal(t, expected, actual)
 }
 
@@ -66,13 +66,13 @@ func TestBindResponse_ShouldSucceed(t *testing.T) {
 		},
 	}
 	expectedModel := `{"some1":"x","some2":5,"some3":{"someX":"xx","someY":9,"someZ":["6","7","8"]}}`
-	parsedModel, appErr := parsers.BindResponse(model)
+	parsedModel, appErr := common_parsers.BindResponse(model)
 	assert.Nil(t, appErr)
 	assert.Equal(t, expectedModel, parsedModel)
 }
 
 func TestBindResponse_ShouldReturnInternalServerErrorWhenMarshalFailed(t *testing.T) {
-	expected := custom_errors.NewInternalServerError("internal server error")
-	_, appErr := parsers.BindResponse(math.Inf(1))
+	expected := common_errors.NewInternalServerError("internal server error")
+	_, appErr := common_parsers.BindResponse(math.Inf(1))
 	assert.Equal(t, expected, appErr)
 }

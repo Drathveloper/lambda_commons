@@ -1,12 +1,12 @@
-package repositories_test
+package common_repositories_test
 
 import (
 	"errors"
-	"github.com/Drathveloper/lambda_commons/constants"
-	"github.com/Drathveloper/lambda_commons/custom_errors"
+	"github.com/Drathveloper/lambda_commons/common_constants"
+	"github.com/Drathveloper/lambda_commons/common_errors"
+	"github.com/Drathveloper/lambda_commons/common_models"
+	"github.com/Drathveloper/lambda_commons/common_repositories"
 	"github.com/Drathveloper/lambda_commons/mocks"
-	"github.com/Drathveloper/lambda_commons/models"
-	"github.com/Drathveloper/lambda_commons/repositories"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
@@ -23,7 +23,7 @@ type DummyItem struct {
 type DynamodbBaseRepositoryTestSuite struct {
 	suite.Suite
 	dynamodbClient *mocks.MockDynamodbClientAPI
-	baseRepository repositories.DynamodbBaseRepository
+	baseRepository common_repositories.DynamodbBaseRepository
 }
 
 func TestDynamodbBaseRepositoryTestSuite(t *testing.T) {
@@ -33,12 +33,12 @@ func TestDynamodbBaseRepositoryTestSuite(t *testing.T) {
 func (suite *DynamodbBaseRepositoryTestSuite) SetupTest() {
 	controller := gomock.NewController(suite.T())
 	suite.dynamodbClient = mocks.NewMockDynamodbClientAPI(controller)
-	suite.baseRepository = repositories.NewDynamodbBaseRepository(suite.dynamodbClient, "someTable")
+	suite.baseRepository = common_repositories.NewDynamodbBaseRepository(suite.dynamodbClient, "someTable")
 }
 
 func (suite *DynamodbBaseRepositoryTestSuite) TestFindBySimplePrimaryKey_ShouldSucceedWhenNoTransaction() {
-	context := models.NewLambdaContext()
-	primaryKey := models.DynamodbSimplePrimaryKey{
+	context := common_models.NewLambdaContext()
+	primaryKey := common_models.DynamodbSimplePrimaryKey{
 		KeyName: "someKey",
 		Value:   "someValue",
 	}
@@ -71,8 +71,8 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestFindBySimplePrimaryKey_ShouldS
 }
 
 func (suite *DynamodbBaseRepositoryTestSuite) TestFindBySimplePrimaryKey_ShouldReturnInternalServerErrorWhenGetItemFailed() {
-	context := models.NewLambdaContext()
-	primaryKey := models.DynamodbSimplePrimaryKey{
+	context := common_models.NewLambdaContext()
+	primaryKey := common_models.DynamodbSimplePrimaryKey{
 		KeyName: "someKey",
 		Value:   "someValue",
 	}
@@ -87,7 +87,7 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestFindBySimplePrimaryKey_ShouldR
 	}
 	getItemOutput := &dynamodb.GetItemOutput{}
 	cause := errors.New("someErr")
-	expectedAppErr := custom_errors.NewInternalServerError("error while reading from database")
+	expectedAppErr := common_errors.NewInternalServerError("error while reading from database")
 
 	suite.dynamodbClient.EXPECT().GetItem(&context, &getItemInput).Return(getItemOutput, cause)
 
@@ -97,12 +97,12 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestFindBySimplePrimaryKey_ShouldR
 }
 
 func (suite *DynamodbBaseRepositoryTestSuite) TestFindBySimplePrimaryKey_ShouldSucceedWhenTransaction() {
-	context := models.NewLambdaContext()
+	context := common_models.NewLambdaContext()
 	transactGetItemsInput := dynamodb.TransactGetItemsInput{
 		TransactItems: []types.TransactGetItem{},
 	}
-	context.Set(constants.ReadTransaction, transactGetItemsInput)
-	expectedContext := models.NewLambdaContext()
+	context.Set(common_constants.ReadTransaction, transactGetItemsInput)
+	expectedContext := common_models.NewLambdaContext()
 	expectedGetItemsInput := dynamodb.TransactGetItemsInput{
 		TransactItems: []types.TransactGetItem{
 			{
@@ -117,14 +117,14 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestFindBySimplePrimaryKey_ShouldS
 			},
 		},
 	}
-	expectedContext.Set(constants.ReadTransaction, expectedGetItemsInput)
-	primaryKey := models.DynamodbSimplePrimaryKey{
+	expectedContext.Set(common_constants.ReadTransaction, expectedGetItemsInput)
+	primaryKey := common_models.DynamodbSimplePrimaryKey{
 		KeyName: "someKey",
 		Value:   "someValue",
 	}
 
 	_, appErr := suite.baseRepository.FindBySimplePrimaryKey(&context, primaryKey, false, true)
-	actualGetItemsInput, exists := context.Get(constants.ReadTransaction)
+	actualGetItemsInput, exists := context.Get(common_constants.ReadTransaction)
 
 	suite.NoError(appErr)
 	suite.True(exists)
@@ -132,13 +132,13 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestFindBySimplePrimaryKey_ShouldS
 }
 
 func (suite *DynamodbBaseRepositoryTestSuite) TestFindByComplexPrimaryKey_ShouldSucceedWhenNoTransaction() {
-	context := models.NewLambdaContext()
-	primaryKey := models.DynamodbComplexPrimaryKey{
-		PartitionKey: models.DynamodbSimplePrimaryKey{
+	context := common_models.NewLambdaContext()
+	primaryKey := common_models.DynamodbComplexPrimaryKey{
+		PartitionKey: common_models.DynamodbSimplePrimaryKey{
 			KeyName: "somePartitionKey",
 			Value:   "somePartitionValue",
 		},
-		SortKey: models.DynamodbSimplePrimaryKey{
+		SortKey: common_models.DynamodbSimplePrimaryKey{
 			KeyName: "someSortKey",
 			Value:   "someSortValue",
 		},
@@ -175,13 +175,13 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestFindByComplexPrimaryKey_Should
 }
 
 func (suite *DynamodbBaseRepositoryTestSuite) TestFindByComplexPrimaryKey_ShouldReturnInternalServerErrorWhenGetItemFailed() {
-	context := models.NewLambdaContext()
-	primaryKey := models.DynamodbComplexPrimaryKey{
-		PartitionKey: models.DynamodbSimplePrimaryKey{
+	context := common_models.NewLambdaContext()
+	primaryKey := common_models.DynamodbComplexPrimaryKey{
+		PartitionKey: common_models.DynamodbSimplePrimaryKey{
 			KeyName: "somePartitionKey",
 			Value:   "somePartitionValue",
 		},
-		SortKey: models.DynamodbSimplePrimaryKey{
+		SortKey: common_models.DynamodbSimplePrimaryKey{
 			KeyName: "someSortKey",
 			Value:   "someSortValue",
 		},
@@ -200,7 +200,7 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestFindByComplexPrimaryKey_Should
 	}
 	getItemOutput := &dynamodb.GetItemOutput{}
 	cause := errors.New("someErr")
-	expectedAppErr := custom_errors.NewInternalServerError("error while reading from database")
+	expectedAppErr := common_errors.NewInternalServerError("error while reading from database")
 
 	suite.dynamodbClient.EXPECT().GetItem(&context, &getItemInput).Return(getItemOutput, cause)
 
@@ -210,12 +210,12 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestFindByComplexPrimaryKey_Should
 }
 
 func (suite *DynamodbBaseRepositoryTestSuite) TestFindByComplexPrimaryKey_ShouldSucceedWhenTransaction() {
-	context := models.NewLambdaContext()
+	context := common_models.NewLambdaContext()
 	transactGetItemsInput := dynamodb.TransactGetItemsInput{
 		TransactItems: []types.TransactGetItem{},
 	}
-	context.Set(constants.ReadTransaction, transactGetItemsInput)
-	expectedContext := models.NewLambdaContext()
+	context.Set(common_constants.ReadTransaction, transactGetItemsInput)
+	expectedContext := common_models.NewLambdaContext()
 	expectedGetItemsInput := dynamodb.TransactGetItemsInput{
 		TransactItems: []types.TransactGetItem{
 			{
@@ -233,20 +233,20 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestFindByComplexPrimaryKey_Should
 			},
 		},
 	}
-	expectedContext.Set(constants.ReadTransaction, expectedGetItemsInput)
-	primaryKey := models.DynamodbComplexPrimaryKey{
-		PartitionKey: models.DynamodbSimplePrimaryKey{
+	expectedContext.Set(common_constants.ReadTransaction, expectedGetItemsInput)
+	primaryKey := common_models.DynamodbComplexPrimaryKey{
+		PartitionKey: common_models.DynamodbSimplePrimaryKey{
 			KeyName: "somePartitionKey",
 			Value:   "somePartitionValue",
 		},
-		SortKey: models.DynamodbSimplePrimaryKey{
+		SortKey: common_models.DynamodbSimplePrimaryKey{
 			KeyName: "someSortKey",
 			Value:   "someSortValue",
 		},
 	}
 
 	_, appErr := suite.baseRepository.FindByComplexPrimaryKey(&context, primaryKey, false, true)
-	actualGetItemsInput, exists := context.Get(constants.ReadTransaction)
+	actualGetItemsInput, exists := context.Get(common_constants.ReadTransaction)
 
 	suite.NoError(appErr)
 	suite.True(exists)
@@ -254,8 +254,8 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestFindByComplexPrimaryKey_Should
 }
 
 func (suite *DynamodbBaseRepositoryTestSuite) TestSaveIfNotPresentWithSimplePrimaryKey_ShouldSucceedWhenNoTransaction() {
-	context := models.NewLambdaContext()
-	primaryKey := models.DynamodbSimplePrimaryKey{
+	context := common_models.NewLambdaContext()
+	primaryKey := common_models.DynamodbSimplePrimaryKey{
 		KeyName: "pk",
 		Value:   "someKey",
 	}
@@ -289,8 +289,8 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestSaveIfNotPresentWithSimplePrim
 }
 
 func (suite *DynamodbBaseRepositoryTestSuite) TestSaveIfNotPresentWithSimplePrimaryKey_ShouldReturnInternalServerErrorWhenPutItemFailed() {
-	context := models.NewLambdaContext()
-	primaryKey := models.DynamodbSimplePrimaryKey{
+	context := common_models.NewLambdaContext()
+	primaryKey := common_models.DynamodbSimplePrimaryKey{
 		KeyName: "pk",
 		Value:   "someKey",
 	}
@@ -316,7 +316,7 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestSaveIfNotPresentWithSimplePrim
 	}
 	putItemOutput := &dynamodb.PutItemOutput{}
 	cause := errors.New("someErr")
-	expectedAppErr := custom_errors.NewInternalServerError("error while writing into database")
+	expectedAppErr := common_errors.NewInternalServerError("error while writing into database")
 
 	suite.dynamodbClient.EXPECT().PutItem(&context, &putItemInput).Return(putItemOutput, cause)
 
@@ -326,12 +326,12 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestSaveIfNotPresentWithSimplePrim
 }
 
 func (suite *DynamodbBaseRepositoryTestSuite) TestSaveIfNotPresentWithSimplePrimaryKey_ShouldSucceedWhenTransaction() {
-	context := models.NewLambdaContext()
+	context := common_models.NewLambdaContext()
 	transactGetItemsInput := dynamodb.TransactWriteItemsInput{
 		TransactItems: []types.TransactWriteItem{},
 	}
-	context.Set(constants.WriteTransaction, transactGetItemsInput)
-	expectedContext := models.NewLambdaContext()
+	context.Set(common_constants.WriteTransaction, transactGetItemsInput)
+	expectedContext := common_models.NewLambdaContext()
 	expectedWriteItemsInput := dynamodb.TransactWriteItemsInput{
 		TransactItems: []types.TransactWriteItem{
 			{
@@ -357,8 +357,8 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestSaveIfNotPresentWithSimplePrim
 			},
 		},
 	}
-	expectedContext.Set(constants.WriteTransaction, expectedWriteItemsInput)
-	primaryKey := models.DynamodbSimplePrimaryKey{
+	expectedContext.Set(common_constants.WriteTransaction, expectedWriteItemsInput)
+	primaryKey := common_models.DynamodbSimplePrimaryKey{
 		KeyName: "pk",
 		Value:   "someKey",
 	}
@@ -366,7 +366,7 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestSaveIfNotPresentWithSimplePrim
 
 	appErr := suite.baseRepository.SaveIfNotPresentWithSimplePrimaryKey(&context, primaryKey, item, true)
 
-	actualWriteItemInput, exists := context.Get(constants.WriteTransaction)
+	actualWriteItemInput, exists := context.Get(common_constants.WriteTransaction)
 
 	suite.NoError(appErr)
 	suite.True(exists)
@@ -374,13 +374,13 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestSaveIfNotPresentWithSimplePrim
 }
 
 func (suite *DynamodbBaseRepositoryTestSuite) TestSaveIfNotPresentWithComplexPrimaryKey_ShouldSucceedWhenNoTransaction() {
-	context := models.NewLambdaContext()
-	primaryKey := models.DynamodbComplexPrimaryKey{
-		PartitionKey: models.DynamodbSimplePrimaryKey{
+	context := common_models.NewLambdaContext()
+	primaryKey := common_models.DynamodbComplexPrimaryKey{
+		PartitionKey: common_models.DynamodbSimplePrimaryKey{
 			KeyName: "somePartitionKey",
 			Value:   "somePartitionValue",
 		},
-		SortKey: models.DynamodbSimplePrimaryKey{
+		SortKey: common_models.DynamodbSimplePrimaryKey{
 			KeyName: "someSortKey",
 			Value:   "someSortValue",
 		},
@@ -419,13 +419,13 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestSaveIfNotPresentWithComplexPri
 }
 
 func (suite *DynamodbBaseRepositoryTestSuite) TestSaveIfNotPresentWithComplexPrimaryKey_ShouldReturnInternalServerErrorWhenPutItemFailed() {
-	context := models.NewLambdaContext()
-	primaryKey := models.DynamodbComplexPrimaryKey{
-		PartitionKey: models.DynamodbSimplePrimaryKey{
+	context := common_models.NewLambdaContext()
+	primaryKey := common_models.DynamodbComplexPrimaryKey{
+		PartitionKey: common_models.DynamodbSimplePrimaryKey{
 			KeyName: "somePartitionKey",
 			Value:   "somePartitionValue",
 		},
-		SortKey: models.DynamodbSimplePrimaryKey{
+		SortKey: common_models.DynamodbSimplePrimaryKey{
 			KeyName: "someSortKey",
 			Value:   "someSortValue",
 		},
@@ -456,7 +456,7 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestSaveIfNotPresentWithComplexPri
 	}
 	putItemOutput := &dynamodb.PutItemOutput{}
 	cause := errors.New("someErr")
-	expectedAppErr := custom_errors.NewInternalServerError("error while writing into database")
+	expectedAppErr := common_errors.NewInternalServerError("error while writing into database")
 
 	suite.dynamodbClient.EXPECT().PutItem(&context, &putItemInput).Return(putItemOutput, cause)
 
@@ -466,12 +466,12 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestSaveIfNotPresentWithComplexPri
 }
 
 func (suite *DynamodbBaseRepositoryTestSuite) TestSaveIfNotPresentWithComplexPrimaryKey_ShouldSucceedWhenTransaction() {
-	context := models.NewLambdaContext()
+	context := common_models.NewLambdaContext()
 	transactGetItemsInput := dynamodb.TransactWriteItemsInput{
 		TransactItems: []types.TransactWriteItem{},
 	}
-	context.Set(constants.WriteTransaction, transactGetItemsInput)
-	expectedContext := models.NewLambdaContext()
+	context.Set(common_constants.WriteTransaction, transactGetItemsInput)
+	expectedContext := common_models.NewLambdaContext()
 	expectedWriteItemsInput := dynamodb.TransactWriteItemsInput{
 		TransactItems: []types.TransactWriteItem{
 			{
@@ -501,13 +501,13 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestSaveIfNotPresentWithComplexPri
 			},
 		},
 	}
-	expectedContext.Set(constants.WriteTransaction, expectedWriteItemsInput)
-	primaryKey := models.DynamodbComplexPrimaryKey{
-		PartitionKey: models.DynamodbSimplePrimaryKey{
+	expectedContext.Set(common_constants.WriteTransaction, expectedWriteItemsInput)
+	primaryKey := common_models.DynamodbComplexPrimaryKey{
+		PartitionKey: common_models.DynamodbSimplePrimaryKey{
 			KeyName: "somePartitionKey",
 			Value:   "somePartitionValue",
 		},
-		SortKey: models.DynamodbSimplePrimaryKey{
+		SortKey: common_models.DynamodbSimplePrimaryKey{
 			KeyName: "someSortKey",
 			Value:   "someSortValue",
 		},
@@ -516,7 +516,7 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestSaveIfNotPresentWithComplexPri
 
 	appErr := suite.baseRepository.SaveIfNotPresentWithComplexPrimaryKey(&context, primaryKey, item, true)
 
-	actualWriteItemInput, exists := context.Get(constants.WriteTransaction)
+	actualWriteItemInput, exists := context.Get(common_constants.WriteTransaction)
 
 	suite.NoError(appErr)
 	suite.True(exists)
@@ -524,7 +524,7 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestSaveIfNotPresentWithComplexPri
 }
 
 func (suite *DynamodbBaseRepositoryTestSuite) TestSave_ShouldSucceedWhenNoTransaction() {
-	context := models.NewLambdaContext()
+	context := common_models.NewLambdaContext()
 	item := DummyItem{Key1: "foo", Key2: "bar"}
 	putItemInput := dynamodb.PutItemInput{
 		TableName:                 aws.String("someTable"),
@@ -548,7 +548,7 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestSave_ShouldSucceedWhenNoTransa
 }
 
 func (suite *DynamodbBaseRepositoryTestSuite) TestSave_ShouldReturnInternalServerErrorWhenPutItemFailed() {
-	context := models.NewLambdaContext()
+	context := common_models.NewLambdaContext()
 	item := DummyItem{Key1: "foo", Key2: "bar"}
 	putItemInput := dynamodb.PutItemInput{
 		TableName: aws.String("someTable"),
@@ -563,7 +563,7 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestSave_ShouldReturnInternalServe
 	}
 	putItemOutput := &dynamodb.PutItemOutput{}
 	cause := errors.New("someErr")
-	expectedAppErr := custom_errors.NewInternalServerError("error while writing into database")
+	expectedAppErr := common_errors.NewInternalServerError("error while writing into database")
 
 	suite.dynamodbClient.EXPECT().PutItem(&context, &putItemInput).Return(putItemOutput, cause)
 
@@ -573,12 +573,12 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestSave_ShouldReturnInternalServe
 }
 
 func (suite *DynamodbBaseRepositoryTestSuite) TestSave_ShouldSucceedWhenTransaction() {
-	context := models.NewLambdaContext()
+	context := common_models.NewLambdaContext()
 	transactGetItemsInput := dynamodb.TransactWriteItemsInput{
 		TransactItems: []types.TransactWriteItem{},
 	}
-	context.Set(constants.WriteTransaction, transactGetItemsInput)
-	expectedContext := models.NewLambdaContext()
+	context.Set(common_constants.WriteTransaction, transactGetItemsInput)
+	expectedContext := common_models.NewLambdaContext()
 	expectedWriteItemsInput := dynamodb.TransactWriteItemsInput{
 		TransactItems: []types.TransactWriteItem{
 			{
@@ -597,12 +597,12 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestSave_ShouldSucceedWhenTransact
 			},
 		},
 	}
-	expectedContext.Set(constants.WriteTransaction, expectedWriteItemsInput)
+	expectedContext.Set(common_constants.WriteTransaction, expectedWriteItemsInput)
 	item := DummyItem{Key1: "foo", Key2: "bar"}
 
 	appErr := suite.baseRepository.Save(&context, item, true)
 
-	actualWriteItemInput, exists := context.Get(constants.WriteTransaction)
+	actualWriteItemInput, exists := context.Get(common_constants.WriteTransaction)
 
 	suite.NoError(appErr)
 	suite.True(exists)
