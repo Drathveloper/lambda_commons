@@ -13,6 +13,7 @@ type RedisBaseRepository interface {
 	Save(ctx *common_models.LambdaContext, redisEntity common_models.RedisEntity) common_errors.GenericApplicationError
 	FindKey(ctx *common_models.LambdaContext, key string, value interface{}) (bool, common_errors.GenericApplicationError)
 	GetTTL(ctx *common_models.LambdaContext, key string) (bool, time.Duration, common_errors.GenericApplicationError)
+	DeleteKey(ctx *common_models.LambdaContext, key string) common_errors.GenericApplicationError
 }
 
 type redisBaseRepository struct {
@@ -66,4 +67,13 @@ func (repository *redisBaseRepository) GetTTL(ctx *common_models.LambdaContext, 
 		return false, 0, common_errors.NewInternalServerError(fmt.Sprintf("error while reading redis key: %s", namespacedKey))
 	}
 	return true, result, nil
+}
+
+func (repository *redisBaseRepository) DeleteKey(ctx *common_models.LambdaContext, key string) common_errors.GenericApplicationError {
+	namespacedKey := fmt.Sprintf("%s:%s", repository.namespace, key)
+	_, err := repository.client.Del(ctx, namespacedKey).Result()
+	if err != nil {
+		return common_errors.NewInternalServerError(fmt.Sprintf("error while deleting redis key: %s", namespacedKey))
+	}
+	return nil
 }
