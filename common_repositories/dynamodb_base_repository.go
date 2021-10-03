@@ -2,9 +2,9 @@ package common_repositories
 
 import (
 	"errors"
-	"github.com/Drathveloper/lambda_commons/common_constants"
-	"github.com/Drathveloper/lambda_commons/common_errors"
-	"github.com/Drathveloper/lambda_commons/common_models"
+	"github.com/Drathveloper/lambda_commons/v2/common_constants"
+	"github.com/Drathveloper/lambda_commons/v2/common_errors"
+	"github.com/Drathveloper/lambda_commons/v2/common_models"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"

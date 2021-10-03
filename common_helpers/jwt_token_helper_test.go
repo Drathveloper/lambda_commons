@@ -1,8 +1,8 @@
 package common_helpers_test
 
 import (
-	"github.com/Drathveloper/lambda_commons/common_errors"
-	"github.com/Drathveloper/lambda_commons/common_helpers"
+	"github.com/Drathveloper/lambda_commons/v2/common_errors"
+	"github.com/Drathveloper/lambda_commons/v2/common_helpers"
 	"github.com/golang-jwt/jwt"
 	"github.com/stretchr/testify/suite"
 	"testing"

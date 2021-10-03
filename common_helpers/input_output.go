@@ -2,9 +2,9 @@ package common_helpers
 
 import (
 	"encoding/json"
-	"github.com/Drathveloper/lambda_commons/common_errors"
-	"github.com/Drathveloper/lambda_commons/common_models"
-	"github.com/Drathveloper/lambda_commons/common_parsers"
+	"github.com/Drathveloper/lambda_commons/v2/common_errors"
+	"github.com/Drathveloper/lambda_commons/v2/common_models"
+	"github.com/Drathveloper/lambda_commons/v2/common_parsers"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/google/uuid"

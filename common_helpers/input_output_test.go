@@ -1,8 +1,8 @@
 package common_helpers_test
 
 import (
-	"github.com/Drathveloper/lambda_commons/common_errors"
-	"github.com/Drathveloper/lambda_commons/common_helpers"
+	"github.com/Drathveloper/lambda_commons/v2/common_errors"
+	"github.com/Drathveloper/lambda_commons/v2/common_helpers"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/stretchr/testify/assert"

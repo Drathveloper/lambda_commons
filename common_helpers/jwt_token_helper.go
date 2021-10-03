@@ -3,7 +3,7 @@ package common_helpers
 import (
 	"crypto/rsa"
 	"fmt"
-	"github.com/Drathveloper/lambda_commons/common_errors"
+	"github.com/Drathveloper/lambda_commons/v2/common_errors"
 	"github.com/golang-jwt/jwt"
 )
 

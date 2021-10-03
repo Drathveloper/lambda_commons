@@ -1,7 +1,7 @@
 package common_errors_test
 
 import (
-	"github.com/Drathveloper/lambda_commons/common_errors"
+	"github.com/Drathveloper/lambda_commons/v2/common_errors"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

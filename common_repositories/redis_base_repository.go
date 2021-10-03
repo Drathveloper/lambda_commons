@@ -3,8 +3,8 @@ package common_repositories
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Drathveloper/lambda_commons/common_errors"
-	"github.com/Drathveloper/lambda_commons/common_models"
+	"github.com/Drathveloper/lambda_commons/v2/common_errors"
+	"github.com/Drathveloper/lambda_commons/v2/common_models"
 	"github.com/go-redis/redis/v8"
 	"time"
 )

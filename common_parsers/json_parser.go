@@ -2,7 +2,7 @@ package common_parsers
 
 import (
 	"encoding/json"
-	"github.com/Drathveloper/lambda_commons/common_errors"
+	"github.com/Drathveloper/lambda_commons/v2/common_errors"
 )
 
 func BindRequest(body string, bind interface{}) common_errors.GenericApplicationError {

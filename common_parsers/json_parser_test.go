@@ -1,8 +1,8 @@
 package common_parsers_test
 
 import (
-	"github.com/Drathveloper/lambda_commons/common_errors"
-	"github.com/Drathveloper/lambda_commons/common_parsers"
+	"github.com/Drathveloper/lambda_commons/v2/common_errors"
+	"github.com/Drathveloper/lambda_commons/v2/common_parsers"
 	"github.com/stretchr/testify/assert"
 	"math"
 	"testing"
