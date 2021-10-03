@@ -55,7 +55,7 @@ func (repository *dynamodbTransactionalRepository) ExecuteReadTransaction(ctx *c
 	for _, request := range transactionInput.TransactItems {
 		tableNames = append(tableNames, *request.Get.TableName)
 	}
-	return common_helpers.MergeResponsesIntoAttributeValueMap(tableNames, transactionOutput.Responses), nil
+	return common_helpers.MergeDynamoDBResponsesIntoAttributeValueMap(tableNames, transactionOutput.Responses)
 }
 
 func (repository *dynamodbTransactionalRepository) StartWriteTransaction(ctx *common_models.LambdaContext) common_errors.GenericApplicationError {

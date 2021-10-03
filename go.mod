@@ -9,7 +9,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression v1.2.2
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.5.0
 	github.com/go-redis/redis/v8 v8.11.3
+	github.com/go-redis/redismock/v8 v8.0.6
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/golang/mock v1.6.0
+	github.com/google/uuid v1.3.0
 	github.com/stretchr/testify v1.7.0
 )

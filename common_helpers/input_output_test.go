@@ -4,6 +4,7 @@ import (
 	"github.com/Drathveloper/lambda_commons/common_errors"
 	"github.com/Drathveloper/lambda_commons/common_helpers"
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/stretchr/testify/assert"
 	"math"
 	"testing"
@@ -53,4 +54,104 @@ func TestMapResponseToAPIGatewayProxyResponse_ShouldSucceed(t *testing.T) {
 	}
 	actualResponse := common_helpers.MapResponseToAPIGatewayProxyResponse(201, "xx")
 	assert.Equal(t, expectedResponse, actualResponse)
+}
+
+func TestMergeDynamoDBResponsesIntoAttributeValueMap_ShouldSucceed(t *testing.T) {
+	tableNames := []string{"someTable1", "someTable2"}
+	itemsResponse := []types.ItemResponse{
+		{
+			Item: map[string]types.AttributeValue{
+				"key1": &types.AttributeValueMemberS{
+					Value: "value1",
+				},
+				"key2": &types.AttributeValueMemberS{
+					Value: "value2",
+				},
+			},
+		},
+		{
+			Item: map[string]types.AttributeValue{
+				"key1": &types.AttributeValueMemberS{
+					Value: "value1",
+				},
+				"key2": &types.AttributeValueMemberS{
+					Value: "value2",
+				},
+			},
+		},
+	}
+	expectedResult := map[string]types.AttributeValue{
+		"someTable1#key1": &types.AttributeValueMemberS{
+			Value: "value1",
+		},
+		"someTable1#key2": &types.AttributeValueMemberS{
+			Value: "value2",
+		},
+		"someTable2#key1": &types.AttributeValueMemberS{
+			Value: "value1",
+		},
+		"someTable2#key2": &types.AttributeValueMemberS{
+			Value: "value2",
+		},
+	}
+
+	result, err := common_helpers.MergeDynamoDBResponsesIntoAttributeValueMap(tableNames, itemsResponse)
+	assert.NoError(t, err)
+	assert.Equal(t, expectedResult, result)
+}
+
+func TestMergeDynamoDBResponsesIntoAttributeValueMap_ShouldReturnErrorWhenTableNamesAndResponsesLengthDiffer(t *testing.T) {
+	tableNames := []string{"someTable2"}
+	itemsResponse := []types.ItemResponse{
+		{
+			Item: map[string]types.AttributeValue{
+				"key1": &types.AttributeValueMemberS{
+					Value: "value1",
+				},
+				"key2": &types.AttributeValueMemberS{
+					Value: "value2",
+				},
+			},
+		},
+		{
+			Item: map[string]types.AttributeValue{
+				"key1": &types.AttributeValueMemberS{
+					Value: "value1",
+				},
+				"key2": &types.AttributeValueMemberS{
+					Value: "value2",
+				},
+			},
+		},
+	}
+	expectedErr := common_errors.NewInternalServerError("the number of table names must be the same than the number of item responses")
+
+	_, err := common_helpers.MergeDynamoDBResponsesIntoAttributeValueMap(tableNames, itemsResponse)
+	assert.Equal(t, expectedErr, err)
+}
+
+func TestBuildCustomAuthorizerResponse_ShouldSucceed(t *testing.T) {
+	effect := "Allow"
+	resource := "someResource"
+	ctx := map[string]interface{}{
+		"someKey": "someValue",
+	}
+	expectedValue := events.APIGatewayCustomAuthorizerResponse{
+		PrincipalID: "someUUID",
+		PolicyDocument: events.APIGatewayCustomAuthorizerPolicy{
+			Version: "2012-10-17",
+			Statement: []events.IAMPolicyStatement{
+				{
+					Action:   []string{"execute-api:Invoke"},
+					Effect:   effect,
+					Resource: []string{resource},
+				},
+			},
+		},
+		Context: ctx,
+	}
+	value := common_helpers.BuildCustomAuthorizerResponse(effect, resource, ctx)
+	expectedValue.PrincipalID = value.PrincipalID
+
+	assert.Equal(t, expectedValue, value)
 }

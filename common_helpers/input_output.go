@@ -7,6 +7,7 @@ import (
 	"github.com/Drathveloper/lambda_commons/common_parsers"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/google/uuid"
 )
 
 func MapErrorToAPIGatewayProxyResponse(customError common_errors.GenericApplicationError) events.APIGatewayProxyResponse {
@@ -44,7 +45,10 @@ func MapResponseToAPIGatewayProxyResponseWithHeaders(httpStatus int, body interf
 	}
 }
 
-func MergeResponsesIntoAttributeValueMap(tableNames []string, items []types.ItemResponse) map[string]types.AttributeValue {
+func MergeDynamoDBResponsesIntoAttributeValueMap(tableNames []string, items []types.ItemResponse) (map[string]types.AttributeValue, common_errors.GenericApplicationError) {
+	if len(tableNames) != len(items) {
+		return nil, common_errors.NewInternalServerError("the number of table names must be the same than the number of item responses")
+	}
 	result := make(map[string]types.AttributeValue, 0)
 	for index, item := range items {
 		tableName := tableNames[index]
@@ -53,5 +57,23 @@ func MergeResponsesIntoAttributeValueMap(tableNames []string, items []types.Item
 			result[tableName+"#"+key] = attribute
 		}
 	}
-	return result
+	return result, nil
+}
+
+func BuildCustomAuthorizerResponse(effect string, resource string, context map[string]interface{}) events.APIGatewayCustomAuthorizerResponse {
+	principalID, _ := uuid.NewUUID()
+	return events.APIGatewayCustomAuthorizerResponse{
+		PrincipalID: principalID.String(),
+		PolicyDocument: events.APIGatewayCustomAuthorizerPolicy{
+			Version: "2012-10-17",
+			Statement: []events.IAMPolicyStatement{
+				{
+					Action:   []string{"execute-api:Invoke"},
+					Effect:   effect,
+					Resource: []string{resource},
+				},
+			},
+		},
+		Context: context,
+	}
 }

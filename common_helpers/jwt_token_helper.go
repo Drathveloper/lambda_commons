@@ -32,7 +32,7 @@ func (helper *jwtHelper) GenerateJwtToken(claims jwt.Claims) (string, common_err
 	token := jwt.NewWithClaims(jwt.SigningMethodRS512, claims)
 	jwtToken, err := token.SignedString(helper.privateKey)
 	if err != nil {
-		return "", common_errors.NewGenericInternalServerError()
+		return "", common_errors.NewInternalServerError("could not sign jwt token with private key")
 	}
 	return jwtToken, nil
 }
@@ -45,7 +45,7 @@ func (helper *jwtHelper) ValidateJwtToken(jwtToken string) (jwt.Claims, common_e
 		return helper.publicKey, nil
 	})
 	if err != nil || !token.Valid {
-		return nil, common_errors.NewGenericUnauthorizedError()
+		return nil, common_errors.NewUnauthorizedError("given jwt token is not valid or is expired")
 	}
 	return token.Claims, nil
 }

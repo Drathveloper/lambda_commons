@@ -13,11 +13,11 @@ import (
 )
 
 type DynamodbBaseRepository interface {
-	FindBySimplePrimaryKey(ctx *common_models.LambdaContext, primaryKey common_models.DynamodbSimplePrimaryKey, isConsistentRead, transactional bool) (map[string]types.AttributeValue, common_errors.GenericApplicationError)
-	FindByComplexPrimaryKey(ctx *common_models.LambdaContext, primaryKey common_models.DynamodbComplexPrimaryKey, isConsistentRead, transactional bool) (map[string]types.AttributeValue, common_errors.GenericApplicationError)
-	SaveIfNotPresentWithSimplePrimaryKey(ctx *common_models.LambdaContext, primaryKey common_models.DynamodbSimplePrimaryKey, item interface{}, transactional bool) common_errors.GenericApplicationError
-	SaveIfNotPresentWithComplexPrimaryKey(ctx *common_models.LambdaContext, primaryKey common_models.DynamodbComplexPrimaryKey, item interface{}, transactional bool) common_errors.GenericApplicationError
-	Save(ctx *common_models.LambdaContext, item interface{}, transactional bool) common_errors.GenericApplicationError
+	FindBySimplePrimaryKey(ctx *common_models.LambdaContext, primaryKey common_models.DynamodbSimplePrimaryKey, isConsistentRead bool) (map[string]types.AttributeValue, common_errors.GenericApplicationError)
+	FindByComplexPrimaryKey(ctx *common_models.LambdaContext, primaryKey common_models.DynamodbComplexPrimaryKey, isConsistentRead bool) (map[string]types.AttributeValue, common_errors.GenericApplicationError)
+	SaveIfNotPresentWithSimplePrimaryKey(ctx *common_models.LambdaContext, primaryKey common_models.DynamodbSimplePrimaryKey, item interface{}) common_errors.GenericApplicationError
+	SaveIfNotPresentWithComplexPrimaryKey(ctx *common_models.LambdaContext, primaryKey common_models.DynamodbComplexPrimaryKey, item interface{}) common_errors.GenericApplicationError
+	Save(ctx *common_models.LambdaContext, item interface{}) common_errors.GenericApplicationError
 }
 
 type dynamodbBaseRepository struct {
@@ -32,7 +32,7 @@ func NewDynamodbBaseRepository(client common_models.DynamodbClientAPI, tableName
 	}
 }
 
-func (repository *dynamodbBaseRepository) FindBySimplePrimaryKey(ctx *common_models.LambdaContext, primaryKey common_models.DynamodbSimplePrimaryKey, isConsistentRead, transactional bool) (map[string]types.AttributeValue, common_errors.GenericApplicationError) {
+func (repository *dynamodbBaseRepository) FindBySimplePrimaryKey(ctx *common_models.LambdaContext, primaryKey common_models.DynamodbSimplePrimaryKey, isConsistentRead bool) (map[string]types.AttributeValue, common_errors.GenericApplicationError) {
 	value, err := attributevalue.Marshal(primaryKey.Value)
 	if err != nil {
 		return nil, common_errors.NewInternalServerError("error while marshaling database primary key")
@@ -40,10 +40,10 @@ func (repository *dynamodbBaseRepository) FindBySimplePrimaryKey(ctx *common_mod
 	keyValues := map[string]types.AttributeValue{
 		primaryKey.KeyName: value,
 	}
-	return repository.findByPrimaryKey(ctx, keyValues, isConsistentRead, transactional)
+	return repository.findByPrimaryKey(ctx, keyValues, isConsistentRead)
 }
 
-func (repository *dynamodbBaseRepository) FindByComplexPrimaryKey(ctx *common_models.LambdaContext, primaryKey common_models.DynamodbComplexPrimaryKey, isConsistentRead, transactional bool) (map[string]types.AttributeValue, common_errors.GenericApplicationError) {
+func (repository *dynamodbBaseRepository) FindByComplexPrimaryKey(ctx *common_models.LambdaContext, primaryKey common_models.DynamodbComplexPrimaryKey, isConsistentRead bool) (map[string]types.AttributeValue, common_errors.GenericApplicationError) {
 	partitionKeyValue, err := attributevalue.Marshal(primaryKey.PartitionKey.Value)
 	if err != nil {
 		return nil, common_errors.NewInternalServerError("error while marshaling database partition key")
@@ -56,10 +56,10 @@ func (repository *dynamodbBaseRepository) FindByComplexPrimaryKey(ctx *common_mo
 		primaryKey.PartitionKey.KeyName: partitionKeyValue,
 		primaryKey.SortKey.KeyName:      sortKeyValue,
 	}
-	return repository.findByPrimaryKey(ctx, keyValues, isConsistentRead, transactional)
+	return repository.findByPrimaryKey(ctx, keyValues, isConsistentRead)
 }
 
-func (repository *dynamodbBaseRepository) SaveIfNotPresentWithSimplePrimaryKey(ctx *common_models.LambdaContext, primaryKey common_models.DynamodbSimplePrimaryKey, item interface{}, transactional bool) common_errors.GenericApplicationError {
+func (repository *dynamodbBaseRepository) SaveIfNotPresentWithSimplePrimaryKey(ctx *common_models.LambdaContext, primaryKey common_models.DynamodbSimplePrimaryKey, item interface{}) common_errors.GenericApplicationError {
 	primaryKeyValue, err := attributevalue.Marshal(primaryKey.Value)
 	if err != nil {
 		return common_errors.NewInternalServerError("error while marshaling database partition key")
@@ -75,10 +75,10 @@ func (repository *dynamodbBaseRepository) SaveIfNotPresentWithSimplePrimaryKey(c
 		return common_errors.NewInternalServerError("error while marshaling item")
 	}
 	itemAttributeValue[primaryKey.KeyName] = primaryKeyValue
-	return repository.save(ctx, builtExpression, itemAttributeValue, transactional)
+	return repository.save(ctx, builtExpression, itemAttributeValue)
 }
 
-func (repository *dynamodbBaseRepository) SaveIfNotPresentWithComplexPrimaryKey(ctx *common_models.LambdaContext, primaryKey common_models.DynamodbComplexPrimaryKey, item interface{}, transactional bool) common_errors.GenericApplicationError {
+func (repository *dynamodbBaseRepository) SaveIfNotPresentWithComplexPrimaryKey(ctx *common_models.LambdaContext, primaryKey common_models.DynamodbComplexPrimaryKey, item interface{}) common_errors.GenericApplicationError {
 	partitionKeyValue, err := attributevalue.Marshal(primaryKey.PartitionKey.Value)
 	if err != nil {
 		return common_errors.NewInternalServerError("error while marshaling database partition key")
@@ -101,24 +101,20 @@ func (repository *dynamodbBaseRepository) SaveIfNotPresentWithComplexPrimaryKey(
 	}
 	itemAttributeValue[primaryKey.PartitionKey.KeyName] = partitionKeyValue
 	itemAttributeValue[primaryKey.SortKey.KeyName] = sortKeyValue
-	return repository.save(ctx, builtExpression, itemAttributeValue, transactional)
+	return repository.save(ctx, builtExpression, itemAttributeValue)
 }
 
-func (repository *dynamodbBaseRepository) Save(ctx *common_models.LambdaContext, item interface{}, transactional bool) common_errors.GenericApplicationError {
+func (repository *dynamodbBaseRepository) Save(ctx *common_models.LambdaContext, item interface{}) common_errors.GenericApplicationError {
 	itemAttributeValue, err := attributevalue.MarshalMap(item)
 	if err != nil {
 		return common_errors.NewInternalServerError("error while marshaling item")
 	}
 	builtExpression := expression.Expression{}
-	return repository.save(ctx, builtExpression, itemAttributeValue, transactional)
+	return repository.save(ctx, builtExpression, itemAttributeValue)
 }
 
-func (repository *dynamodbBaseRepository) save(ctx *common_models.LambdaContext, expression expression.Expression, item map[string]types.AttributeValue, transactional bool) common_errors.GenericApplicationError {
-	if transactional {
-		input, exists := ctx.Get(common_constants.WriteTransaction)
-		if !exists {
-			return common_errors.NewInternalServerError("there is no write transaction in progress")
-		}
+func (repository *dynamodbBaseRepository) save(ctx *common_models.LambdaContext, expression expression.Expression, item map[string]types.AttributeValue) common_errors.GenericApplicationError {
+	if input, exists := ctx.Get(common_constants.WriteTransaction); exists {
 		transactionInput := input.(dynamodb.TransactWriteItemsInput)
 		transactWriteItem := types.TransactWriteItem{
 			Put: &types.Put{
@@ -153,12 +149,8 @@ func (repository *dynamodbBaseRepository) save(ctx *common_models.LambdaContext,
 	return nil
 }
 
-func (repository *dynamodbBaseRepository) findByPrimaryKey(ctx *common_models.LambdaContext, keyValues map[string]types.AttributeValue, isConsistentRead, transactional bool) (map[string]types.AttributeValue, common_errors.GenericApplicationError) {
-	if transactional {
-		input, exists := ctx.Get(common_constants.ReadTransaction)
-		if !exists {
-			return map[string]types.AttributeValue{}, common_errors.NewInternalServerError("there is no read transaction in progress")
-		}
+func (repository *dynamodbBaseRepository) findByPrimaryKey(ctx *common_models.LambdaContext, keyValues map[string]types.AttributeValue, isConsistentRead bool) (map[string]types.AttributeValue, common_errors.GenericApplicationError) {
+	if input, exists := ctx.Get(common_constants.ReadTransaction); exists {
 		transactionInput := input.(dynamodb.TransactGetItemsInput)
 		transactGetItem := types.TransactGetItem{
 			Get: &types.Get{

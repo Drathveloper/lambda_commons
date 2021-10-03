@@ -64,7 +64,7 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestFindBySimplePrimaryKey_ShouldS
 	}
 	suite.dynamodbClient.EXPECT().GetItem(&context, &getItemInput).Return(getItemOutput, nil)
 
-	response, appErr := suite.baseRepository.FindBySimplePrimaryKey(&context, primaryKey, false, false)
+	response, appErr := suite.baseRepository.FindBySimplePrimaryKey(&context, primaryKey, false)
 
 	suite.NoError(appErr)
 	suite.Equal(response, item)
@@ -91,7 +91,7 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestFindBySimplePrimaryKey_ShouldR
 
 	suite.dynamodbClient.EXPECT().GetItem(&context, &getItemInput).Return(getItemOutput, cause)
 
-	_, appErr := suite.baseRepository.FindBySimplePrimaryKey(&context, primaryKey, false, false)
+	_, appErr := suite.baseRepository.FindBySimplePrimaryKey(&context, primaryKey, false)
 
 	suite.Equal(expectedAppErr, appErr)
 }
@@ -123,7 +123,7 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestFindBySimplePrimaryKey_ShouldS
 		Value:   "someValue",
 	}
 
-	_, appErr := suite.baseRepository.FindBySimplePrimaryKey(&context, primaryKey, false, true)
+	_, appErr := suite.baseRepository.FindBySimplePrimaryKey(&context, primaryKey, false)
 	actualGetItemsInput, exists := context.Get(common_constants.ReadTransaction)
 
 	suite.NoError(appErr)
@@ -168,7 +168,7 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestFindByComplexPrimaryKey_Should
 	}
 	suite.dynamodbClient.EXPECT().GetItem(&context, &getItemInput).Return(getItemOutput, nil)
 
-	response, appErr := suite.baseRepository.FindByComplexPrimaryKey(&context, primaryKey, false, false)
+	response, appErr := suite.baseRepository.FindByComplexPrimaryKey(&context, primaryKey, false)
 
 	suite.NoError(appErr)
 	suite.Equal(response, item)
@@ -204,7 +204,7 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestFindByComplexPrimaryKey_Should
 
 	suite.dynamodbClient.EXPECT().GetItem(&context, &getItemInput).Return(getItemOutput, cause)
 
-	_, appErr := suite.baseRepository.FindByComplexPrimaryKey(&context, primaryKey, false, false)
+	_, appErr := suite.baseRepository.FindByComplexPrimaryKey(&context, primaryKey, false)
 
 	suite.Equal(expectedAppErr, appErr)
 }
@@ -245,7 +245,7 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestFindByComplexPrimaryKey_Should
 		},
 	}
 
-	_, appErr := suite.baseRepository.FindByComplexPrimaryKey(&context, primaryKey, false, true)
+	_, appErr := suite.baseRepository.FindByComplexPrimaryKey(&context, primaryKey, false)
 	actualGetItemsInput, exists := context.Get(common_constants.ReadTransaction)
 
 	suite.NoError(appErr)
@@ -283,7 +283,7 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestSaveIfNotPresentWithSimplePrim
 
 	suite.dynamodbClient.EXPECT().PutItem(&context, &putItemInput).Return(putItemOutput, nil)
 
-	appErr := suite.baseRepository.SaveIfNotPresentWithSimplePrimaryKey(&context, primaryKey, item, false)
+	appErr := suite.baseRepository.SaveIfNotPresentWithSimplePrimaryKey(&context, primaryKey, item)
 
 	suite.NoError(appErr)
 }
@@ -320,7 +320,7 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestSaveIfNotPresentWithSimplePrim
 
 	suite.dynamodbClient.EXPECT().PutItem(&context, &putItemInput).Return(putItemOutput, cause)
 
-	appErr := suite.baseRepository.SaveIfNotPresentWithSimplePrimaryKey(&context, primaryKey, item, false)
+	appErr := suite.baseRepository.SaveIfNotPresentWithSimplePrimaryKey(&context, primaryKey, item)
 
 	suite.Equal(expectedAppErr, appErr)
 }
@@ -364,7 +364,7 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestSaveIfNotPresentWithSimplePrim
 	}
 	item := DummyItem{Key1: "foo", Key2: "bar"}
 
-	appErr := suite.baseRepository.SaveIfNotPresentWithSimplePrimaryKey(&context, primaryKey, item, true)
+	appErr := suite.baseRepository.SaveIfNotPresentWithSimplePrimaryKey(&context, primaryKey, item)
 
 	actualWriteItemInput, exists := context.Get(common_constants.WriteTransaction)
 
@@ -413,7 +413,7 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestSaveIfNotPresentWithComplexPri
 
 	suite.dynamodbClient.EXPECT().PutItem(&context, &putItemInput).Return(putItemOutput, nil)
 
-	appErr := suite.baseRepository.SaveIfNotPresentWithComplexPrimaryKey(&context, primaryKey, item, false)
+	appErr := suite.baseRepository.SaveIfNotPresentWithComplexPrimaryKey(&context, primaryKey, item)
 
 	suite.NoError(appErr)
 }
@@ -460,7 +460,7 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestSaveIfNotPresentWithComplexPri
 
 	suite.dynamodbClient.EXPECT().PutItem(&context, &putItemInput).Return(putItemOutput, cause)
 
-	appErr := suite.baseRepository.SaveIfNotPresentWithComplexPrimaryKey(&context, primaryKey, item, false)
+	appErr := suite.baseRepository.SaveIfNotPresentWithComplexPrimaryKey(&context, primaryKey, item)
 
 	suite.Equal(expectedAppErr, appErr)
 }
@@ -514,7 +514,7 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestSaveIfNotPresentWithComplexPri
 	}
 	item := DummyItem{Key1: "foo", Key2: "bar"}
 
-	appErr := suite.baseRepository.SaveIfNotPresentWithComplexPrimaryKey(&context, primaryKey, item, true)
+	appErr := suite.baseRepository.SaveIfNotPresentWithComplexPrimaryKey(&context, primaryKey, item)
 
 	actualWriteItemInput, exists := context.Get(common_constants.WriteTransaction)
 
@@ -542,7 +542,7 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestSave_ShouldSucceedWhenNoTransa
 
 	suite.dynamodbClient.EXPECT().PutItem(&context, &putItemInput).Return(putItemOutput, nil)
 
-	appErr := suite.baseRepository.Save(&context, item, false)
+	appErr := suite.baseRepository.Save(&context, item)
 
 	suite.NoError(appErr)
 }
@@ -567,7 +567,7 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestSave_ShouldReturnInternalServe
 
 	suite.dynamodbClient.EXPECT().PutItem(&context, &putItemInput).Return(putItemOutput, cause)
 
-	appErr := suite.baseRepository.Save(&context, item, false)
+	appErr := suite.baseRepository.Save(&context, item)
 
 	suite.Equal(expectedAppErr, appErr)
 }
@@ -600,7 +600,7 @@ func (suite *DynamodbBaseRepositoryTestSuite) TestSave_ShouldSucceedWhenTransact
 	expectedContext.Set(common_constants.WriteTransaction, expectedWriteItemsInput)
 	item := DummyItem{Key1: "foo", Key2: "bar"}
 
-	appErr := suite.baseRepository.Save(&context, item, true)
+	appErr := suite.baseRepository.Save(&context, item)
 
 	actualWriteItemInput, exists := context.Get(common_constants.WriteTransaction)
 

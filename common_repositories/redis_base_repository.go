@@ -17,11 +17,11 @@ type RedisBaseRepository interface {
 }
 
 type redisBaseRepository struct {
-	client    redis.UniversalClient
+	client    *redis.Client
 	namespace string
 }
 
-func NewRedisBaseRepository(client redis.UniversalClient, namespace string) RedisBaseRepository {
+func NewRedisBaseRepository(client *redis.Client, namespace string) RedisBaseRepository {
 	return &redisBaseRepository{
 		client:    client,
 		namespace: namespace,
@@ -52,7 +52,7 @@ func (repository *redisBaseRepository) FindKey(ctx *common_models.LambdaContext,
 	}
 	err = json.Unmarshal([]byte(result), &value)
 	if err != nil {
-		return true, common_errors.NewInternalServerError(fmt.Sprintf("error while unmarshaling result"))
+		return true, common_errors.NewInternalServerError(fmt.Sprintf("error while unmarshalling result"))
 	}
 	return true, nil
 }
